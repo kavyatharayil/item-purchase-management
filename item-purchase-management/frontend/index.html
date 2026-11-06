@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Item & Purchase Management System</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <header class="top-header">
+        <div class="container header-flex">
+            <div>
+                <h1>Item & Purchase Management System</h1>
+            </div>
+            <nav class="nav-tabs">
+                <button class="tab-btn active" onclick="switchTab('items-tab', this)">Item Master</button>
+                <button class="tab-btn" onclick="switchTab('purchases-tab', this)">Create / Edit Purchase</button>
+                <button class="tab-btn" onclick="switchTab('purchase-list-tab', this)">Purchase History</button>
+                <button class="tab-btn" onclick="switchTab('stock-tab', this)">Stock & Availability</button>
+                <button class="tab-btn" onclick="switchTab('types-tab', this)">Item Types</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="alert-box" class="alert hidden"></div>
+
+        <section id="items-tab" class="tab-content active">
+            <div class="grid-2">
+                <div class="card">
+                    <h2 id="item-form-title">Create New Item</h2>
+                    <form id="item-form" onsubmit="handleItemSubmit(event)">
+                        <input type="hidden" id="item-id" />
+
+                        <div class="form-group">
+                            <label for="item-name">Item Name <span class="req">*</span></label>
+                            <input type="text" id="item-name" placeholder="e.g., Laptop, Mouse, Chair" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="item-type">Item Type <span class="req">*</span></label>
+                            <select id="item-type" required>
+                                <option value="">-- Select Item Type --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="item-date">Purchase Date <span class="req">*</span></label>
+                            <input type="date" id="item-date" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="item-stock">Stock Available <span class="req">*</span></label>
+                            <input type="number" id="item-stock" min="0" step="1" placeholder="0" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="item-status">Status <span class="req">*</span></label>
+                            <select id="item-status" required>
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="item-submit-btn">Save Item</button>
+                            <button type="button" class="btn btn-secondary hidden" id="item-cancel-btn" onclick="resetItemForm()">Cancel Edit</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Item Master List</h2>
+                        <button class="btn btn-sm btn-secondary" onclick="loadItems()">Refresh</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Purchase Date</th>
+                                    <th>Current Stock</th>
+                                    <th>Availability</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="items-table-body">
+                                <tr><td colspan="8" class="text-center">Loading items...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="purchases-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 id="purchase-form-title">Create New Purchase Order</h2>
+                    <button type="button" class="btn btn-secondary hidden" id="cancel-purchase-edit-btn" onclick="resetPurchaseForm()">Cancel Edit Mode</button>
+                </div>
+
+                <form id="purchase-form" onsubmit="submitPurchaseOrder(event)">
+                    <input type="hidden" id="edit-purchase-id" />
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="order-id">Order ID (Auto-generated if left blank)</label>
+                            <input type="text" id="order-id" placeholder="e.g., PO-00001" />
+                        </div>
+                        <div class="form-group">
+                            <label for="order-date">Purchase Date <span class="req">*</span></label>
+                            <input type="date" id="order-date" required />
+                        </div>
+                    </div>
+
+                    <hr class="divider" />
+                    <h3>Add Items to Order</h3>
+                    <p class="hint">Only <strong>Active</strong> items can be selected for a new purchase. Quantity must be greater than zero.</p>
+
+                    <div class="line-item-builder">
+                        <div class="form-group">
+                            <label for="select-purchase-item">Select Active Item</label>
+                            <select id="select-purchase-item">
+                                <option value="">-- Choose an Active Item --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="purchase-qty">Quantity</label>
+                            <input type="number" id="purchase-qty" min="1" step="1" placeholder="Enter quantity" />
+                        </div>
+
+                        <div class="form-group btn-align">
+                            <button type="button" class="btn btn-secondary" onclick="addOrderLine()">+ Add Item to Order</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item ID</th>
+                                    <th>Item Name</th>
+                                    <th>Item Type</th>
+                                    <th>Current Stock Available</th>
+                                    <th>Order Quantity</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="order-lines-body">
+                                <tr><td colspan="6" class="text-center">No items added to this order yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-actions mt-15">
+                        <button type="submit" class="btn btn-primary" id="submit-purchase-btn">Submit Complete Purchase</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="purchase-list-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2>Purchase Orders (Historical Transactions)</h2>
+                        <p class="hint">Note: Purchases are permanent historical records and cannot be deleted.</p>
+                    </div>
+                    <button class="btn btn-sm btn-secondary" onclick="loadPurchases()">Refresh</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Order ID</th>
+                                <th>Purchase Date</th>
+                                <th>Items Summary</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purchases-table-body">
+                            <tr><td colspan="6" class="text-center">Loading purchases...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="stock-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Stock & Availability Overview</h2>
+                    <button class="btn btn-sm btn-secondary" onclick="loadItems()">Refresh Stock</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item ID</th>
+                                <th>Item Name</th>
+                                <th>Item Type</th>
+                                <th>Current Stock</th>
+                                <th>Availability Status</th>
+                                <th>Active / Inactive</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stock-table-body">
+                            <tr><td colspan="6" class="text-center">Loading stock view...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="types-tab" class="tab-content">
+            <div class="grid-2">
+                <div class="card">
+                    <h2 id="type-form-title">Create Item Type</h2>
+                    <form id="type-form" onsubmit="handleTypeSubmit(event)">
+                        <input type="hidden" id="type-id" />
+                        <div class="form-group">
+                            <label for="type-name">Item Type Name <span class="req">*</span></label>
+                            <input type="text" id="type-name" placeholder="e.g., Electronics, Office Supplies" required />
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="type-submit-btn">Save Item Type</button>
+                            <button type="button" class="btn btn-secondary hidden" id="type-cancel-btn" onclick="resetTypeForm()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Existing Item Types</h2>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Type Name</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="types-table-body">
+                                <tr><td colspan="3" class="text-center">Loading item types...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="details-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Details</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
